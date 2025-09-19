@@ -5,7 +5,17 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',     // React development server
+    'https://gueripep.com',      // Production domain
+    'https://www.gueripep.com'   // Production domain with www
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 //Kameleoon
