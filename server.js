@@ -8,6 +8,27 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
+//Kameleoon
+// // -- Mandatory credentials
+// const credentials = {
+//   clientId: '',
+//   clientSecret: 'my_client_secret',
+// };
+// const client = new KameleoonClient({
+//   siteCode: 'my_site_code',
+//   credentials,
+//   configuration,
+//   externals: {
+//     visitorCodeManager: new KameleoonVisitorCodeManager(),
+//     eventSource: new KameleoonEventSource(),
+//   },
+// });
+// // -- Waiting for the client initialization using `async/await`
+// async function init() {
+//   await client.initialize();
+// }
+// init();
+
 // Sample products data
 const products = [
   {
@@ -142,6 +163,49 @@ app.put('/api/cart/:userId/:productId', (req, res) => {
   }
   
   res.json(carts[userId] || []);
+});
+
+// Checkout endpoint - clears cart and returns order confirmation
+app.post('/api/checkout/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const cartItems = carts[userId] || [];
+  
+  if (cartItems.length === 0) {
+    return res.status(400).json({ message: 'Cart is empty' });
+  }
+  
+  // Calculate total for the order
+  const total = cartItems.reduce((sum, item) => {
+    const product = products.find(p => p.id === item.productId);
+    return sum + (product ? product.price * item.quantity : 0);
+  }, 0);
+  
+  // Create order confirmation
+  const order = {
+    orderId: Date.now().toString(),
+    userId: userId,
+    items: cartItems.map(item => {
+      const product = products.find(p => p.id === item.productId);
+      return {
+        productId: item.productId,
+        productName: product ? product.name : 'Unknown Product',
+        quantity: item.quantity,
+        price: product ? product.price : 0
+      };
+    }),
+    total: total.toFixed(2),
+    timestamp: new Date().toISOString()
+  };
+  
+  // Clear the cart after checkout
+  carts[userId] = [];
+  console.log(`Order placed:`, order);
+  
+  res.json({
+    success: true,
+    message: 'Checkout successful',
+    order: order
+  });
 });
 
 app.listen(PORT, () => {

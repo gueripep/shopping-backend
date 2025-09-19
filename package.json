@@ -12,6 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@kameleoon/nodejs-event-source": "^1.1.0",
+    "@kameleoon/nodejs-requester": "^1.2.0",
+    "@kameleoon/nodejs-sdk": "^5.15.1",
+    "@kameleoon/nodejs-visitor-code-manager": "^1.1.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "nodemon": "^3.1.10"
