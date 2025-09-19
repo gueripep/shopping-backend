@@ -9,7 +9,8 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',     // React development server
     'https://gueripep.com',      // Production domain
-    'https://www.gueripep.com'   // Production domain with www
+    'https://www.gueripep.com',   // Production domain with www
+    'https://api.gueripep.com'   // API domain
   ],
   credentials: true,
   optionsSuccessStatus: 200
