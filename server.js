@@ -92,12 +92,12 @@ app.get('/', (req, res) => {
 });
 
 // Get all products
-app.get('/api/products', (req, res) => {
+app.get('/products', (req, res) => {
   res.json(products);
 });
 
 // Get product by ID
-app.get('/api/products/:id', (req, res) => {
+app.get('/products/:id', (req, res) => {
   const productId = parseInt(req.params.id);
   const product = products.find(p => p.id === productId);
   
@@ -109,7 +109,7 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // Search products
-app.get('/api/products/search/:query', (req, res) => {
+app.get('/products/search/:query', (req, res) => {
   const query = req.params.query.toLowerCase();
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(query) ||
@@ -122,14 +122,14 @@ app.get('/api/products/search/:query', (req, res) => {
 let carts = {};
 
 // Get cart for user
-app.get('/api/cart/:userId', (req, res) => {
+app.get('/cart/:userId', (req, res) => {
   const userId = req.params.userId;
   const cart = carts[userId] || [];
   res.json(cart);
 });
 
 // Add item to cart
-app.post('/api/cart/:userId', (req, res) => {
+app.post('/cart/:userId', (req, res) => {
   const userId = req.params.userId;
   const { productId, quantity = 1 } = req.body;
   
@@ -149,7 +149,7 @@ app.post('/api/cart/:userId', (req, res) => {
 });
 
 // Remove item from cart
-app.delete('/api/cart/:userId/:productId', (req, res) => {
+app.delete('/cart/:userId/:productId', (req, res) => {
   const userId = req.params.userId;
   const productId = parseInt(req.params.productId);
   
@@ -161,7 +161,7 @@ app.delete('/api/cart/:userId/:productId', (req, res) => {
 });
 
 // Update cart item quantity
-app.put('/api/cart/:userId/:productId', (req, res) => {
+app.put('/cart/:userId/:productId', (req, res) => {
   const userId = req.params.userId;
   const productId = parseInt(req.params.productId);
   const { quantity } = req.body;
@@ -177,7 +177,7 @@ app.put('/api/cart/:userId/:productId', (req, res) => {
 });
 
 // Checkout endpoint - clears cart and returns order confirmation
-app.post('/api/checkout/:userId', (req, res) => {
+app.post('/checkout/:userId', (req, res) => {
   const userId = req.params.userId;
   const cartItems = carts[userId] || [];
   
