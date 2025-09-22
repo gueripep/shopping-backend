@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
@@ -20,25 +21,35 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 //Kameleoon
-// // -- Mandatory credentials
-// const credentials = {
-//   clientId: '',
-//   clientSecret: 'my_client_secret',
-// };
-// const client = new KameleoonClient({
-//   siteCode: 'my_site_code',
-//   credentials,
-//   configuration,
-//   externals: {
-//     visitorCodeManager: new KameleoonVisitorCodeManager(),
-//     eventSource: new KameleoonEventSource(),
-//   },
-// });
-// // -- Waiting for the client initialization using `async/await`
-// async function init() {
-//   await client.initialize();
-// }
-// init();
+// -- Mandatory credentials
+const credentials = {
+  clientId: process.env.KAMELEOON_CLIENT_ID,
+  clientSecret: process.env.KAMELEOON_CLIENT_SECRET,
+};
+const configuration = {
+  updateInterval: 1,
+  environment: Environment.Production,
+};
+
+const client = new KameleoonClient({
+  siteCode: 'dnkd8eslzh',
+  credentials,
+  configuration,
+  externals: {
+    visitorCodeManager: new KameleoonVisitorCodeManager(),
+    eventSource: new KameleoonEventSource(),
+  },
+});
+// -- Waiting for the client initialization using `async/await`
+async function init() {
+  await client.initialize();
+}
+init();
+
+client
+  .initialize()
+  .then(() => { })
+  .catch((error) => { });
 
 // Sample products data
 const products = [
@@ -100,7 +111,7 @@ app.get('/products', (req, res) => {
 app.get('/products/:id', (req, res) => {
   const productId = parseInt(req.params.id);
   const product = products.find(p => p.id === productId);
-  
+
   if (product) {
     res.json(product);
   } else {
@@ -111,7 +122,7 @@ app.get('/products/:id', (req, res) => {
 // Search products
 app.get('/products/search/:query', (req, res) => {
   const query = req.params.query.toLowerCase();
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(query) ||
     product.description.toLowerCase().includes(query)
   );
@@ -132,19 +143,19 @@ app.get('/cart/:userId', (req, res) => {
 app.post('/cart/:userId', (req, res) => {
   const userId = req.params.userId;
   const { productId, quantity = 1 } = req.body;
-  
+
   if (!carts[userId]) {
     carts[userId] = [];
   }
-  
+
   const existingItem = carts[userId].find(item => item.productId === productId);
-  
+
   if (existingItem) {
     existingItem.quantity += quantity;
   } else {
     carts[userId].push({ productId, quantity });
   }
-  
+
   res.json(carts[userId]);
 });
 
@@ -152,11 +163,11 @@ app.post('/cart/:userId', (req, res) => {
 app.delete('/cart/:userId/:productId', (req, res) => {
   const userId = req.params.userId;
   const productId = parseInt(req.params.productId);
-  
+
   if (carts[userId]) {
     carts[userId] = carts[userId].filter(item => item.productId !== productId);
   }
-  
+
   res.json(carts[userId] || []);
 });
 
@@ -165,14 +176,14 @@ app.put('/cart/:userId/:productId', (req, res) => {
   const userId = req.params.userId;
   const productId = parseInt(req.params.productId);
   const { quantity } = req.body;
-  
+
   if (carts[userId]) {
     const item = carts[userId].find(item => item.productId === productId);
     if (item) {
       item.quantity = quantity;
     }
   }
-  
+
   res.json(carts[userId] || []);
 });
 
@@ -180,17 +191,17 @@ app.put('/cart/:userId/:productId', (req, res) => {
 app.post('/checkout/:userId', (req, res) => {
   const userId = req.params.userId;
   const cartItems = carts[userId] || [];
-  
+
   if (cartItems.length === 0) {
     return res.status(400).json({ message: 'Cart is empty' });
   }
-  
+
   // Calculate total for the order
   const total = cartItems.reduce((sum, item) => {
     const product = products.find(p => p.id === item.productId);
     return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
-  
+  }, 0).toFixed(2);
+
   // Create order confirmation
   const order = {
     orderId: Date.now().toString(),
@@ -204,14 +215,27 @@ app.post('/checkout/:userId', (req, res) => {
         price: product ? product.price : 0
       };
     }),
-    total: total.toFixed(2),
+    total,
     timestamp: new Date().toISOString()
   };
-  
+  const visitorCode = client.getVisitorCode({
+    request: req,
+    response: res,
+  });
+  console.log('Visitor Code at checkout:', visitorCode);
+    // -- Track conversion
+  client.trackConversion({
+    visitorCode,
+    revenue: total,
+    goalId: 392016,
+  });
+
   // Clear the cart after checkout
   carts[userId] = [];
   console.log(`Order placed:`, order);
-  
+
+
+
   res.json({
     success: true,
     message: 'Checkout successful',
