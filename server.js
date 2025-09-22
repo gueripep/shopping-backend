@@ -196,6 +196,7 @@ app.put('/cart/:userId/:productId', (req, res) => {
 // Checkout endpoint - clears cart and returns order confirmation
 app.post('/checkout/:userId', (req, res) => {
   const userId = req.params.userId;
+  const { visitorCode: providedVisitorCode } = req.body;
   const cartItems = carts[userId] || [];
 
   if (cartItems.length === 0) {
@@ -224,17 +225,20 @@ app.post('/checkout/:userId', (req, res) => {
     total,
     timestamp: new Date().toISOString()
   };
-  const visitorCode = client.getVisitorCode({
-    request: req,
-    response: res,
-  });
-  console.log('Visitor Code at checkout:', visitorCode);
+  
+  // Only track conversion if visitor code is provided from frontend
+  if (providedVisitorCode) {
+    console.log('Visitor Code at checkout:', providedVisitorCode);
+    console.log('Tracking conversion with frontend visitor code');
     // -- Track conversion
-  client.trackConversion({
-    visitorCode,
-    revenue: total,
-    goalId: 392016,
-  });
+    client.trackConversion({
+      visitorCode: providedVisitorCode,
+      revenue: total,
+      goalId: 392016,
+    });
+  } else {
+    console.log('No visitor code provided from frontend - skipping Kameleoon tracking');
+  }
 
   // Clear the cart after checkout
   carts[userId] = [];
