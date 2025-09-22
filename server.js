@@ -1,6 +1,11 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { Environment, KameleoonClient } from '@kameleoon/nodejs-sdk';
+import { KameleoonVisitorCodeManager } from '@kameleoon/nodejs-visitor-code-manager';
+import { KameleoonEventSource } from '@kameleoon/nodejs-event-source';
+import { KameleoonRequester } from '@kameleoon/nodejs-requester';
+
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -38,6 +43,7 @@ const client = new KameleoonClient({
   externals: {
     visitorCodeManager: new KameleoonVisitorCodeManager(),
     eventSource: new KameleoonEventSource(),
+    requester: new KameleoonRequester(),
   },
 });
 // -- Waiting for the client initialization using `async/await`
