@@ -64,42 +64,48 @@ const products = [
     name: "Wireless Headphones",
     price: 99.99,
     description: "High-quality wireless headphones with noise cancellation",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Electronics"
   },
   {
     id: 2,
     name: "Smartphone",
     price: 699.99,
     description: "Latest smartphone with advanced camera features",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Electronics"
   },
   {
     id: 3,
     name: "Laptop",
     price: 1299.99,
     description: "Powerful laptop for work and gaming",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Computing"
   },
   {
     id: 4,
     name: "Smart Watch",
     price: 299.99,
     description: "Fitness tracking and smart notifications",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Accessories"
   },
   {
     id: 5,
     name: "Tablet",
     price: 449.99,
     description: "10-inch tablet perfect for entertainment and productivity",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Computing"
   },
   {
     id: 6,
     name: "Gaming Console",
     price: 499.99,
     description: "Next-generation gaming console with 4K support",
-    image: "https://picsum.photos/300/300"
+    image: "https://picsum.photos/300/300",
+    category: "Gaming"
   }
 ];
 
@@ -125,12 +131,28 @@ app.get('/products/:id', (req, res) => {
   }
 });
 
-// Search products
+// Get all categories
+app.get('/categories', (req, res) => {
+  const categories = [...new Set(products.map(product => product.category))].sort();
+  res.json(categories);
+});
+
+// Get products by category
+app.get('/products/category/:category', (req, res) => {
+  const category = req.params.category;
+  const filteredProducts = products.filter(product => 
+    product.category.toLowerCase() === category.toLowerCase()
+  );
+  res.json(filteredProducts);
+});
+
+// Search products (updated to include category search)
 app.get('/products/search/:query', (req, res) => {
   const query = req.params.query.toLowerCase();
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(query) ||
-    product.description.toLowerCase().includes(query)
+    product.description.toLowerCase().includes(query) ||
+    product.category.toLowerCase().includes(query)
   );
   res.json(filteredProducts);
 });
