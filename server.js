@@ -11,13 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',     // React development server
-    'https://gueripep.com',      // Production domain
-    'https://www.gueripep.com',   // Production domain with www
-    'https://api.gueripep.com'   // API domain
-  ],
+  origin: isDevelopment 
+    ? ['http://localhost:3000']  // Development: only allow local React dev server
+    : [
+        'https://shop.gueripep.com'
+      ],
   credentials: true,
   optionsSuccessStatus: 200
 };
