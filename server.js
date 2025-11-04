@@ -47,6 +47,8 @@ const client = new KameleoonClient({
     requester: new KameleoonRequester(),
   },
 });
+
+
 // -- Waiting for the client initialization using `async/await`
 async function init() {
   await client.initialize();
