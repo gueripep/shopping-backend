@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 
 // Kameleoon & Data
 import { products } from './data/products.js';
-import { kameleoonClient, trackConversion, KAMELEOON_GOAL_ID } from './lib/kameleoon.js';
+import { kameleoonClient, trackConversionViaDataAPI, trackConversionViaSDK, KAMELEOON_GOAL_ID } from './lib/kameleoon.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -143,7 +143,8 @@ app.post('/checkout/:userId', (req, res) => {
   // Kameleoon Conversion Tracking
   const visitorCode = req.cookies.kameleoonVisitorCode;
   if (visitorCode) {
-    trackConversion(visitorCode, KAMELEOON_GOAL_ID, total);
+    trackConversionViaDataAPI(visitorCode, KAMELEOON_GOAL_ID, total);
+    trackConversionViaSDK(visitorCode, KAMELEOON_GOAL_ID, total);
   }
 
   // Clear cart and respond

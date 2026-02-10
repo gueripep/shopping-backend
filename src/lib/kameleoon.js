@@ -31,10 +31,10 @@ export const kameleoonClient = new KameleoonClient({
 });
 
 /**
- * Tracks a goal conversion using the Kameleoon Data API.
- * This is useful when you want to track conversions from the backend.
+ * Method 1: Tracking a goal conversion using the MANUAL Data API request.
+ * Useful for showing students horizontal API calls.
  */
-export async function trackConversion(visitorCode, goalId, revenue) {
+export async function trackConversionViaDataAPI(visitorCode, goalId, revenue) {
     try {
         const nonce = Array.from({ length: 16 }, () =>
             Math.floor(Math.random() * 16).toString(16)
@@ -58,14 +58,29 @@ export async function trackConversion(visitorCode, goalId, revenue) {
         });
 
         if (response.ok) {
-            console.log(`[Kameleoon] ✓ Conversion tracked successfully`);
+            console.log(`[Kameleoon] ✓ Conversion for goal ${goalId} tracked via Data API (Revenue: ${revenue})`);
             return true;
         }
 
         console.error(`[Kameleoon] ✗ Failed to track conversion: ${response.status}`);
         return false;
     } catch (error) {
-        console.error('[Kameleoon] ✗ Error tracking conversion:', error);
+        console.error('[Kameleoon] ✗ Error tracking conversion via Data API:', error);
+        return false;
+    }
+}
+
+/**
+ * Method 2: Tracking a goal conversion using the OFFICIAL SDK method.
+ * The standard way to track conversions in a production environment.
+ */
+export function trackConversionViaSDK(visitorCode, goalId, revenue) {
+    try {
+        kameleoonClient.addConversion(visitorCode, goalId, parseFloat(revenue));
+        console.log(`[Kameleoon] ✓ Conversion for goal ${goalId} tracked via SDK (Revenue: ${revenue})`);
+        return true;
+    } catch (error) {
+        console.error('[Kameleoon] ✗ Error tracking conversion via SDK:', error);
         return false;
     }
 }
