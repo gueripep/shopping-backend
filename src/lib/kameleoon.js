@@ -1,4 +1,4 @@
-import { Environment, KameleoonClient } from '@kameleoon/nodejs-sdk';
+import { Environment, KameleoonClient, UserAgent } from '@kameleoon/nodejs-sdk';
 import { KameleoonVisitorCodeManager } from '@kameleoon/nodejs-visitor-code-manager';
 import { KameleoonEventSource } from '@kameleoon/nodejs-event-source';
 import { KameleoonRequester } from '@kameleoon/nodejs-requester';
@@ -46,7 +46,6 @@ export async function trackConversionViaDataAPI(visitorCode, goalId, revenue) {
             nonce,
             eventType: 'CONVERSION',
             goalID: goalId,
-            ...(revenue && { revenue: parseFloat(revenue) })
         };
 
         console.log(`[Kameleoon] Tracking conversion for visitor ${visitorCode}, goal ${goalId}`);
@@ -76,11 +75,30 @@ export async function trackConversionViaDataAPI(visitorCode, goalId, revenue) {
  */
 export function trackConversionViaSDK(visitorCode, goalId, revenue) {
     try {
-        kameleoonClient.addConversion(visitorCode, goalId, parseFloat(revenue));
+        kameleoonClient.trackConversion({
+            visitorCode,
+            goalId,
+            revenue: parseFloat(revenue)
+        });
         console.log(`[Kameleoon] ✓ Conversion for goal ${goalId} tracked via SDK (Revenue: ${revenue})`);
         return true;
     } catch (error) {
         console.error('[Kameleoon] ✗ Error tracking conversion via SDK:', error);
         return false;
+    }
+}
+
+/**
+ * Adds User Agent data for a visitor to Kameleoon.
+ */
+export function addUserAgent(visitorCode, userAgentString) {
+    try {
+        if (!visitorCode || !userAgentString) return;
+
+        console.log(`[Kameleoon] Adding UserAgent data for visitor ${visitorCode}: ${userAgentString}`);
+        const userAgent = new UserAgent(userAgentString);
+        kameleoonClient.addData(visitorCode, userAgent);
+    } catch (error) {
+        console.error('[Kameleoon] ✗ Error adding UserAgent data:', error);
     }
 }

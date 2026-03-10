@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 
 // Kameleoon & Data
 import { products } from './data/products.js';
-import { kameleoonClient, trackConversionViaDataAPI, trackConversionViaSDK, KAMELEOON_GOAL_ID } from './lib/kameleoon.js';
+import { kameleoonClient, trackConversionViaDataAPI, trackConversionViaSDK, KAMELEOON_GOAL_ID, addUserAgent } from './lib/kameleoon.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -25,14 +25,22 @@ app.use(cookieParser());
 
 /**
  * Kameleoon Middleware
- * Ensures every request has a visitor code (sets a cookie if missing).
+ * Ensures every request has a visitor code (sets a cookie if missing)
+ * and passes the User Agent for bot filtering.
  */
 app.use(async (req, res, next) => {
   try {
-    kameleoonClient.getVisitorCode({ request: req, response: res });
+    const visitorCode = kameleoonClient.getVisitorCode({ request: req, response: res });
+    
+    // Add User Agent data for bot filtering
+    const userAgent = req.get('User-Agent');
+    if (visitorCode && userAgent) {
+      addUserAgent(visitorCode, userAgent);
+    }
+    
     next();
   } catch (error) {
-    console.error("Kameleoon visitor code error:", error);
+    console.error("Kameleoon middleware error:", error);
     next(error);
   }
 });
@@ -140,11 +148,15 @@ app.post('/checkout/:userId', (req, res) => {
     return sum + (product ? product.price * item.quantity : 0);
   }, 0).toFixed(2);
 
-  // Kameleoon Conversion Tracking
-  const visitorCode = req.cookies.kameleoonVisitorCode;
+  // Kameleoon Conversion Tracking - Get visitor code (prioritize frontend body, then cookie)
+  const visitorCode = req.body.visitorCode || req.cookies.kameleoonVisitorCode;
+
   if (visitorCode) {
+    console.log(`[Kameleoon] Found visitor code: ${visitorCode}. Triggering dual conversion...`);
     trackConversionViaDataAPI(visitorCode, KAMELEOON_GOAL_ID, total);
     trackConversionViaSDK(visitorCode, KAMELEOON_GOAL_ID, total);
+  } else {
+    console.warn('[Kameleoon] No visitor code found in body or cookies. Conversion tracking skipped.');
   }
 
   // Clear cart and respond
